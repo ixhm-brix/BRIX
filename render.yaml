@@ -1,0 +1,27 @@
+# Render Blueprint — https://render.com/docs/blueprint-spec
+#
+# In Render: New → Blueprint → connect this repo. It reads this file and creates the
+# service with these settings, so nothing has to be typed into the dashboard by hand.
+services:
+  - type: web
+    name: briqx
+    runtime: static
+    # npm ci (not install) so the build uses the exact locked dependency tree
+    buildCommand: npm ci && npm run build
+    staticPublishPath: ./dist
+    pullRequestPreviewsEnabled: true
+    headers:
+      # Vite fingerprints these filenames, so they can be cached permanently
+      - path: /assets/*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+      # The HTML must never be cached, or visitors keep getting the old asset names
+      - path: /
+        name: Cache-Control
+        value: no-cache
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin

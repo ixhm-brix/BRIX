@@ -1,0 +1,74 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: #0b0f0e;
+  color: #e8e3d4;
+  font-family: 'Instrument Sans', system-ui, sans-serif;
+  overflow-x: hidden;
+}
+
+::selection {
+  background-color: #e0a34b;
+  color: #0b0f0e;
+}
+
+:where(a, button, summary, [tabindex]):focus-visible {
+  outline: 2px solid #e0a34b;
+  outline-offset: 3px;
+  border-radius: 3px;
+}
+
+/* Survey-sheet caption: the mono voice used for every measured quantity */
+.reading {
+  font-family: 'Spline Sans Mono', ui-monospace, monospace;
+  font-size: 0.625rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #9fb3ad;
+}
+
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+/* The glass nav floats over everything, so anchored sections must clear it */
+[id] {
+  scroll-margin-top: 6.5rem;
+}
+
+/* Hairline that fades out at both ends, like a survey rule */
+.rule {
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgba(159, 179, 173, 0.28) 12%,
+    rgba(159, 179, 173, 0.28) 88%,
+    transparent
+  );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
