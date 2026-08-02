@@ -50,6 +50,18 @@ export const MANIFESTO = {
   ],
 }
 
+/**
+ * The assistant. "Munyakazi" is Kinyarwanda for the one who works — a fitting name for
+ * something that answers at any hour. The hail is what it says unprompted on every load.
+ */
+export const ASSISTANT = {
+  name: 'Munyakazi',
+  role: 'Answers from our prices & FAQ',
+  /** One line only — this is a tap target, not the conversation. The fuller welcome
+   * lives in GREETING, inside the panel, where there is room for it. */
+  hail: 'Need a hand? Ask Munyakazi.',
+}
+
 export const SCHEDULE = {
   label: 'How it goes',
   headline: { lead: 'A date, not', accent: 'an estimate.' },

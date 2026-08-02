@@ -5,8 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
-    "preview": "vite preview"
+    "build": "node scripts/build-kb.mjs && tsc && vite build",
+    "preview": "vite preview",
+    "build:kb": "node scripts/build-kb.mjs"
   },
   "dependencies": {
     "react": "^18.3.1",

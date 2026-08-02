@@ -1,3 +1,4 @@
+import Assistant from './components/Assistant'
 import Hero from './sections/Hero'
 import Build from './sections/Build'
 import Pricing from './sections/Pricing'
@@ -22,6 +23,7 @@ export default function App() {
       <Faq />
       <Manifesto />
       <Contact />
+      <Assistant />
     </main>
   )
 }

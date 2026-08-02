@@ -26,6 +26,12 @@ type TopoFieldProps = {
   seed?: number
   className?: string
   intensity?: number
+  /**
+   * Grid spacing in px. Defaults scale with viewport, which is right for full-bleed
+   * backgrounds but far too coarse inside something small — a 62px lens would get a
+   * 3x3 grid and no readable contours. Override to keep the terrain legible at size.
+   */
+  step?: number
 }
 
 const LEVELS = 30
@@ -64,7 +70,12 @@ function terrain(x: number, y: number, t: number, seed: number) {
   )
 }
 
-export default function TopoField({ seed = 0, className = '', intensity = 1 }: TopoFieldProps) {
+export default function TopoField({
+  seed = 0,
+  className = '',
+  intensity = 1,
+  step: stepOverride,
+}: TopoFieldProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
@@ -111,7 +122,7 @@ export default function TopoField({ seed = 0, className = '', intensity = 1 }: T
       canvas.height = Math.round(height * dpr)
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
 
-      step = width < 640 ? 20 : 14
+      step = stepOverride ?? (width < 640 ? 20 : 14)
       cols = Math.ceil(width / step) + 1
       rows = Math.ceil(height / step) + 1
       grid = new Float32Array(cols * rows)
@@ -302,7 +313,7 @@ export default function TopoField({ seed = 0, className = '', intensity = 1 }: T
       ro.disconnect()
       window.removeEventListener('scroll', onScroll)
     }
-  }, [seed, intensity])
+  }, [seed, intensity, stepOverride])
 
   return <canvas ref={canvasRef} aria-hidden className={`block h-full w-full ${className}`} />
 }
