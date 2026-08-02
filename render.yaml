@@ -10,6 +10,16 @@ services:
     buildCommand: npm ci && npm run build
     staticPublishPath: ./dist
     pullRequestPreviewsEnabled: true
+    envVars:
+      # Munyakazi lives on the VPS behind bot.briqx.ninja. Without these the
+      # widget still works — it falls back to displaying published prices,
+      # the FAQ and the WhatsApp handoff.
+      - key: VITE_ASSISTANT_URL
+        value: https://bot.briqx.ninja/widget/chat
+      - key: VITE_ASSISTANT_KEY
+        value: GLL_aRHeULVmAuGkwyc-abCdqheHVCZcjuA_XGLSOVNOWCZG
+      - key: VITE_WHATSAPP_NUMBER
+        value: "250729247124"
     headers:
       # Vite fingerprints these filenames, so they can be cached permanently
       - path: /assets/*
