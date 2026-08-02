@@ -106,8 +106,14 @@ export default function Summit({
       // Whole body breathing — slow, and never quite the same twice because two
       // periods that do not divide evenly are summed.
       const breathe = 1 + Math.sin(t * 0.85) * 0.028 + Math.sin(t * 0.31) * 0.016
-      const ox = cx + leanX
-      const oy = cy + leanY
+      // Contents drift inside the globe. Two incommensurate frequencies per axis
+      // so the path never closes into a visible loop — it wanders rather than
+      // orbiting. The globe body below stays put, so this reads as something
+      // moving INSIDE glass rather than the whole ornament sliding around.
+      const driftX = (Math.sin(t * 0.41) * 0.055 + Math.sin(t * 0.23 + 1.7) * 0.032) * size
+      const driftY = (Math.cos(t * 0.33) * 0.055 + Math.cos(t * 0.19 + 0.6) * 0.032) * size
+      const ox = cx + leanX + driftX
+      const oy = cy + leanY + driftY
 
       // Its own ground.
       //
@@ -116,15 +122,17 @@ export default function Summit({
       // rather than an object resting on it. A warm dark disc gives its contours their
       // own surface to sit on. It stays opaque through the body and releases over the
       // last fifth of the radius, so it separates without ever cutting a hard edge.
-      const discR = maxR * 1.12 * breathe
-      const base = ctx.createRadialGradient(ox, oy, 0, ox, oy, discR)
+      // Anchored at the true centre and oversized: the drifting contours must
+      // never expose an edge inside the globe.
+      const discR = size * 0.72
+      const base = ctx.createRadialGradient(cx, cy, 0, cx, cy, discR)
       base.addColorStop(0, 'rgba(28,20,14,0.97)')
       base.addColorStop(0.66, 'rgba(23,17,12,0.95)')
       base.addColorStop(0.82, 'rgba(19,14,10,0.82)')
       base.addColorStop(1, 'rgba(17,12,9,0)')
       ctx.fillStyle = base
       ctx.beginPath()
-      ctx.arc(ox, oy, discR, 0, Math.PI * 2)
+      ctx.arc(cx, cy, discR, 0, Math.PI * 2)
       ctx.fill()
 
       const glowR = maxR * (1.05 + near * 0.12) * breathe
@@ -146,14 +154,14 @@ export default function Summit({
         const baseR = maxR * (0.14 + 0.86 * k) * breathe
 
         // Inner contours turn faster than outer ones — shear, not spin
-        const spin = t * (0.05 + (1 - k) * 0.16) * (hot ? 1.5 : 1)
+        const spin = t * (0.09 + (1 - k) * 0.26) * (hot ? 1.6 : 1)
 
         ctx.beginPath()
         for (let s = 0; s <= STEPS; s++) {
           const a = (s / STEPS) * Math.PI * 2 + spin
           const nx = Math.cos(a) * 1.5 + 3
           const ny = Math.sin(a) * 1.5 + 3
-          const n = noise2(nx + t * 0.3, ny - t * 0.19, i * 7 + 3)
+          const n = noise2(nx + t * 0.46, ny - t * 0.31, i * 7 + 3)
           const r = baseR * (1 + (n - 0.5) * wobble * 2)
           const x = ox + Math.cos(a) * r
           const y = oy + Math.sin(a) * r

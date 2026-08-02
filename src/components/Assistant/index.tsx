@@ -165,13 +165,31 @@ export default function Assistant() {
           className="group relative flex items-center justify-center transition-transform duration-300 active:scale-95"
           style={{ width: LENS, height: LENS }}
         >
-          {/* Warm bloom rather than a rim — the ball should not sit inside anything */}
+          {/* Warm bloom spilling past the glass */}
           <span className="pointer-events-none absolute -inset-3 rounded-full bg-[radial-gradient(closest-side,rgba(224,163,75,0.30),transparent_72%)]" />
+
+          {/*
+            A glass globe with the terrain drifting inside it.
+            The layers are stacked the way light actually behaves on a sphere, and
+            each one is doing a job:
+              1. the contours (clipped to the circle, so they pass behind the rim)
+              2. inner shading  — darkens the lower-right so it reads as volume
+              3. fresnel rim    — glass is brightest where you look through its edge
+              4. specular       — the hard highlight, upper-left, that says "glass"
+              5. sheen          — the soft bloom around that highlight
+            Nothing here is a stroke; a flat outline would flatten it back to a disc.
+          */}
           <span
-            className="relative block overflow-hidden rounded-full shadow-[0_10px_28px_rgba(0,0,0,0.62)] transition-transform duration-500 ease-out group-hover:scale-[1.06]"
+            className="relative block overflow-hidden rounded-full shadow-[0_12px_30px_rgba(0,0,0,0.66),0_2px_6px_rgba(0,0,0,0.5)] transition-transform duration-500 ease-out group-hover:scale-[1.06]"
             style={{ width: LENS, height: LENS }}
           >
             <Summit size={LENS} active={hover} paused={reduced} interactive />
+
+            <span className="pointer-events-none absolute inset-0 rounded-full bg-[radial-gradient(115%_115%_at_32%_26%,transparent_38%,rgba(6,4,3,0.42)_100%)]" />
+            <span className="pointer-events-none absolute inset-0 rounded-full bg-[radial-gradient(closest-side,transparent_72%,rgba(255,240,214,0.16)_88%,rgba(255,240,214,0.42)_97%,transparent_100%)]" />
+            <span className="pointer-events-none absolute left-[15%] top-[11%] h-[26%] w-[34%] -rotate-[18deg] rounded-full bg-[radial-gradient(closest-side,rgba(255,252,245,0.9),rgba(255,248,235,0.35)_55%,transparent_100%)] blur-[0.4px]" />
+            <span className="pointer-events-none absolute left-[8%] top-[6%] h-[46%] w-[54%] rounded-full bg-[radial-gradient(closest-side,rgba(255,246,228,0.22),transparent_72%)]" />
+            <span className="pointer-events-none absolute bottom-[9%] left-1/2 h-[16%] w-[46%] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,rgba(240,196,137,0.3),transparent_75%)]" />
           </span>
           <span
             className={`pointer-events-none absolute inset-0 flex items-center justify-center text-xl leading-none text-basalt transition-opacity duration-300 ${
