@@ -13,7 +13,7 @@ import { ask, GREETING, SUGGESTIONS, type Message } from './client'
  * continuously and never repeat. No stroke and no pulse. See Summit.tsx.
  */
 
-const LENS = 84
+const LENS = 66
 
 function useReducedMotion() {
   const [reduced, setReduced] = useState(false)
@@ -210,7 +210,7 @@ export default function Assistant() {
           open
             ? 'pointer-events-auto translate-y-0 scale-100 opacity-100'
             : 'pointer-events-none translate-y-3 scale-95 opacity-0'
-        } inset-x-3 bottom-24 sm:inset-x-auto sm:bottom-28 sm:right-7 sm:w-[380px]`}
+        } inset-x-3 bottom-[5.5rem] sm:inset-x-auto sm:bottom-24 sm:right-7 sm:w-[380px]`}
       >
         <div className="relative overflow-hidden rounded-3xl bg-basalt shadow-[0_24px_70px_rgba(0,0,0,0.55)] ring-1 ring-ceramic/[0.07]">
           {/* Its own terrain, so the panel reads the same wherever it opens over the page */}
