@@ -30,8 +30,11 @@ services:
       # Routing through briqx.ninja means the browser only ever resolves the name
       # it already reached the site on. It also removes the CORS preflight.
       - type: rewrite
-        source: /assistant/*
-        destination: https://bot.briqx.ninja/widget/*
+        source: /assistant/chat
+        destination: https://bot.briqx.ninja/widget/chat
+      - type: rewrite
+        source: /assistant/config
+        destination: https://bot.briqx.ninja/widget/config
     headers:
       # Vite fingerprints these filenames, so they can be cached permanently
       - path: /assets/*
