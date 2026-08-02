@@ -15,11 +15,23 @@ services:
       # widget still works — it falls back to displaying published prices,
       # the FAQ and the WhatsApp handoff.
       - key: VITE_ASSISTANT_URL
-        value: https://bot.briqx.ninja/widget/chat
+        value: /assistant/chat
       - key: VITE_ASSISTANT_KEY
         value: GLL_aRHeULVmAuGkwyc-abCdqheHVCZcjuA_XGLSOVNOWCZG
       - key: VITE_WHATSAPP_NUMBER
         value: "250729247124"
+    routes:
+      # Proxy the assistant through this same origin.
+      #
+      # The widget used to call https://bot.briqx.ninja directly. That works, but
+      # it makes every visitor's browser depend on resolving a second hostname —
+      # and a resolver that cached NXDOMAIN before the record existed will keep
+      # failing with ERR_NAME_NOT_RESOLVED for as long as it holds that entry.
+      # Routing through briqx.ninja means the browser only ever resolves the name
+      # it already reached the site on. It also removes the CORS preflight.
+      - type: rewrite
+        source: /assistant/*
+        destination: https://bot.briqx.ninja/widget/*
     headers:
       # Vite fingerprints these filenames, so they can be cached permanently
       - path: /assets/*
