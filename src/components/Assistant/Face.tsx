@@ -40,7 +40,10 @@ export default function Face({
 }: FaceProps) {
   const rootRef = useRef<SVGSVGElement>(null)
   const headRef = useRef<SVGGElement>(null)
+  const eyesRef = useRef<SVGGElement>(null)
   const pupilsRef = useRef<SVGGElement>(null)
+  const pupilLRef = useRef<SVGEllipseElement>(null)
+  const pupilRRef = useRef<SVGEllipseElement>(null)
   const lidLRef = useRef<SVGRectElement>(null)
   const lidRRef = useRef<SVGRectElement>(null)
   const antennaRef = useRef<SVGCircleElement>(null)
@@ -85,8 +88,8 @@ export default function Face({
       last = now
       t += dt * (hot ? 1.7 : 1)
 
-      gx += (tgx - gx) * 0.12
-      gy += (tgy - gy) * 0.12
+      gx += (tgx - gx) * 0.18
+      gy += (tgy - gy) * 0.18
 
       // Idle float. Two periods so it never settles into an obvious rhythm.
       const bob = Math.sin(t * 1.5) * 0.9 + Math.sin(t * 0.62) * 0.5
@@ -99,7 +102,10 @@ export default function Face({
       const lag = Math.sin((t - 0.16) * 1.5) * 1.5 + Math.sin((t - 0.16) * 0.62) * 0.8
       antennaRef.current?.setAttribute('cx', String(50 + lag * 0.8 + gx * 0.5))
 
-      pupilsRef.current?.setAttribute('transform', `translate(${gx} ${gy})`)
+      // The eye lenses shift a little; the pupils inside them travel much further.
+      // That difference is what reads as rolling the eyes rather than sliding them.
+      eyesRef.current?.setAttribute('transform', `translate(${gx * 0.34} ${gy * 0.34})`)
+      pupilsRef.current?.setAttribute('transform', `translate(${gx * 0.62} ${gy * 0.62})`)
 
       // Blink cycle
       if (blink < 0) {
@@ -131,6 +137,14 @@ export default function Face({
         lid.setAttribute('y', String(47 + (13 - Math.max(0.6, openH)) / 2))
       }
 
+      // Pupils close with the lids. Without this they would float over a shut eye.
+      const open = Math.max(0.6, openH) / 13
+      for (const pupil of [pupilLRef.current, pupilRRef.current]) {
+        if (!pupil) continue
+        pupil.setAttribute('ry', String(3.1 * open))
+        pupil.setAttribute('opacity', String(open > 0.25 ? 1 : 0))
+      }
+
       const glow = 0.55 + Math.sin(t * (hot ? 5 : 2.1)) * 0.25 + (hot ? 0.2 : 0)
       antennaRef.current?.setAttribute('opacity', String(Math.min(1, glow)))
     }
@@ -157,8 +171,8 @@ export default function Face({
       const dy = e.clientY - (r.top + r.height / 2)
       // Saturates with distance, so a cursor far away still pins the gaze fully.
       const norm = (v: number, k: number) => Math.tanh(v / k)
-      tgx = norm(dx, 260) * 3.4
-      tgy = norm(dy, 260) * 2.6
+      tgx = norm(dx, 240) * 5.2
+      tgy = norm(dy, 240) * 4.0
     }
     if (interactive) window.addEventListener('pointermove', onPointer, { passive: true })
 
@@ -233,9 +247,14 @@ export default function Face({
         <path d="M30 46 Q40 40 52 41 L46 47 Q36 46 30 52 Z" fill="rgba(255,255,255,0.09)" />
 
         {/* eyes — height animates for blink and squint */}
-        <g ref={pupilsRef}>
+        <g ref={eyesRef}>
           <rect ref={lidLRef} x="35.5" y="47" width="9" height="13" rx="4.5" fill={`url(#${uid}-eye)`} />
           <rect ref={lidRRef} x="55.5" y="47" width="9" height="13" rx="4.5" fill={`url(#${uid}-eye)`} />
+          {/* Pupils ride inside the lenses and travel further than they do */}
+          <g ref={pupilsRef}>
+            <ellipse ref={pupilLRef} cx="40" cy="53.5" rx="2.4" ry="3.1" fill="#2A1608" opacity="0.92" />
+            <ellipse ref={pupilRRef} cx="60" cy="53.5" rx="2.4" ry="3.1" fill="#2A1608" opacity="0.92" />
+          </g>
         </g>
       </g>
     </svg>
