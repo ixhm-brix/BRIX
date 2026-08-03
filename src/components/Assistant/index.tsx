@@ -3,6 +3,7 @@ import TopoField from '../TopoField'
 import Summit from './Summit'
 import { ASSISTANT } from '../../content'
 import { ask, GREETING, SUGGESTIONS, type Message } from './client'
+import { useKeyboardInset } from './useKeyboardInset'
 
 /**
  * The assistant, as a summit on the survey.
@@ -51,6 +52,28 @@ export default function Assistant() {
   const [hover, setHover] = useState(false)
 
   const reduced = useReducedMotion()
+  const keyboard = useKeyboardInset()
+
+  // Below sm the panel is a sheet; above it, a floating card. Only the sheet has
+  // to dodge the keyboard.
+  const [compact, setCompact] = useState(false)
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 639px)')
+    const on = () => setCompact(mq.matches)
+    on()
+    mq.addEventListener('change', on)
+    return () => mq.removeEventListener('change', on)
+  }, [])
+
+  // With the keyboard up, lift the panel clear of it and let it use the whole
+  // visible area, so the input and the newest messages are both on screen.
+  const sheet = compact && keyboard.open
+  const panelStyle = sheet
+    ? { bottom: keyboard.inset + 10, top: 10, height: 'auto' as const }
+    : undefined
+  const bodyStyle = sheet
+    ? { height: Math.max(220, keyboard.viewportHeight - 20) }
+    : undefined
   const launcherRef = useRef<HTMLButtonElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const logRef = useRef<HTMLDivElement>(null)
@@ -110,6 +133,13 @@ export default function Assistant() {
     logRef.current?.scrollTo({ top: logRef.current.scrollHeight, behavior: 'smooth' })
   }, [messages, thinking])
 
+  // The keyboard opening changes how much of the log is visible; without this the
+  // newest message can end up scrolled off above the fold.
+  useEffect(() => {
+    if (!open) return
+    logRef.current?.scrollTo({ top: logRef.current.scrollHeight })
+  }, [open, keyboard.inset, keyboard.viewportHeight])
+
   const send = (text: string) => {
     const clean = text.trim()
     if (!clean || thinking) return
@@ -126,7 +156,11 @@ export default function Assistant() {
 
   return (
     <>
-      <div className="fixed bottom-5 right-5 z-[70] flex items-center gap-3 sm:bottom-7 sm:right-7">
+      <div
+        className={`fixed bottom-5 right-5 z-[70] flex items-center gap-3 transition-opacity duration-200 sm:bottom-7 sm:right-7 ${
+          sheet ? 'pointer-events-none opacity-0' : 'opacity-100'
+        }`}
+      >
         {hail && !open && (
           <div className="assistant-peek flex items-center gap-2 rounded-full bg-soil/95 py-1.5 pl-2 pr-1.5 shadow-[0_12px_34px_rgba(0,0,0,0.5)] ring-1 ring-ceramic/[0.08] backdrop-blur-sm">
             <button
@@ -211,6 +245,7 @@ export default function Assistant() {
             ? 'pointer-events-auto translate-y-0 scale-100 opacity-100'
             : 'pointer-events-none translate-y-3 scale-95 opacity-0'
         } inset-x-3 bottom-[5.5rem] sm:inset-x-auto sm:bottom-24 sm:right-7 sm:w-[380px]`}
+        style={panelStyle}
       >
         <div className="relative overflow-hidden rounded-3xl bg-basalt shadow-[0_24px_70px_rgba(0,0,0,0.55)] ring-1 ring-ceramic/[0.07]">
           {/* Its own terrain, so the panel reads the same wherever it opens over the page */}
@@ -219,7 +254,7 @@ export default function Assistant() {
           </div>
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_80%_at_50%_0%,rgba(11,15,14,0.72),rgba(11,15,14,0.94)_60%,#0B0F0E)]" />
 
-          <div className="relative flex h-[min(72vh,540px)] flex-col">
+          <div className="relative flex h-[min(72vh,540px)] flex-col" style={bodyStyle}>
             <header className="flex items-center gap-3 border-b border-ceramic/10 px-4 py-3.5">
               <Summit size={34} rings={6} paused={reduced} />
               <div className="min-w-0 flex-1">

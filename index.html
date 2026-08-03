@@ -2,7 +2,11 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- interactive-widget=resizes-content makes the layout viewport shrink when the
+         on-screen keyboard opens, so fixed elements sit above it instead of behind
+         it. Chrome/Android honours this; iOS Safari does not, which is why the
+         assistant also tracks visualViewport in JS. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content" />
     <meta name="theme-color" content="#0B0F0E" />
     <title>briqx — software studio, Kigali</title>
     <meta
