@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import TopoField from '../TopoField'
 import Summit from './Summit'
 import { ASSISTANT } from '../../content'
@@ -65,15 +65,13 @@ export default function Assistant() {
     return () => mq.removeEventListener('change', on)
   }, [])
 
-  // With the keyboard up, lift the panel clear of it and let it use the whole
-  // visible area, so the input and the newest messages are both on screen.
-  const sheet = compact && keyboard.open
-  const panelStyle = sheet
-    ? { bottom: keyboard.inset + 10, top: 10, height: 'auto' as const }
-    : undefined
-  const bodyStyle = sheet
-    ? { height: Math.max(220, keyboard.viewportHeight - 20) }
-    : undefined
+  // On a phone the chat goes full screen for as long as it is open. Earlier this
+  // tried to stay a floating card and merely dodge the keyboard, which meant
+  // setting top, bottom AND an explicit height — three constraints fighting each
+  // other, and double-compensating on Android where the viewport meta already
+  // shrinks the layout viewport. Full screen needs none of that arithmetic: the
+  // sheet fills the viewport and the keyboard is handled by padding the bottom.
+  const sheet = compact && open
   const launcherRef = useRef<HTMLButtonElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const logRef = useRef<HTMLDivElement>(null)
@@ -129,16 +127,32 @@ export default function Assistant() {
     }
   }, [open])
 
-  useEffect(() => {
-    logRef.current?.scrollTo({ top: logRef.current.scrollHeight, behavior: 'smooth' })
-  }, [messages, thinking])
+  // Pin the log to the newest message, repeatedly for a short window.
+  //
+  // A single scroll is not enough: the panel reflows when the keyboard opens and
+  // bubbles change height as text wraps, so scrollHeight measured in the first
+  // frame is stale and the last message ends up clipped behind the input.
+  const pinToBottom = useCallback((smooth = false) => {
+    const started = performance.now()
+    const step = () => {
+      const el = logRef.current
+      if (!el) return
+      el.scrollTo({ top: el.scrollHeight, behavior: smooth ? 'smooth' : 'auto' })
+      if (performance.now() - started < 500) requestAnimationFrame(step)
+    }
+    requestAnimationFrame(step)
+  }, [])
 
-  // The keyboard opening changes how much of the log is visible; without this the
-  // newest message can end up scrolled off above the fold.
+  useEffect(() => {
+    pinToBottom(true)
+  }, [messages, thinking, pinToBottom])
+
+  // The keyboard opening changes how much of the log is visible; re-pin so the
+  // newest message is never left behind the input.
   useEffect(() => {
     if (!open) return
-    logRef.current?.scrollTo({ top: logRef.current.scrollHeight })
-  }, [open, keyboard.inset, keyboard.viewportHeight])
+    pinToBottom()
+  }, [open, keyboard.inset, keyboard.viewportHeight, sheet, pinToBottom])
 
   const send = (text: string) => {
     const clean = text.trim()
@@ -240,21 +254,38 @@ export default function Assistant() {
         role="dialog"
         aria-label={ASSISTANT.name}
         aria-hidden={!open}
-        className={`fixed z-[69] origin-bottom-right transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+        className={`fixed z-[69] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
           open
             ? 'pointer-events-auto translate-y-0 scale-100 opacity-100'
             : 'pointer-events-none translate-y-3 scale-95 opacity-0'
-        } inset-x-3 bottom-[5.5rem] sm:inset-x-auto sm:bottom-24 sm:right-7 sm:w-[380px]`}
-        style={panelStyle}
+        } ${
+          sheet
+            ? 'inset-0 bg-basalt'
+            : 'inset-x-3 bottom-[5.5rem] origin-bottom-right sm:inset-x-auto sm:bottom-24 sm:right-7 sm:w-[380px]'
+        }`}
+        style={
+          sheet
+            ? {
+                // Only the keyboard's own height. The viewport itself is already
+                // handled by inset-0, whether or not the browser shrank it.
+                paddingBottom: keyboard.inset,
+                paddingTop: 'env(safe-area-inset-top)',
+              }
+            : undefined
+        }
       >
-        <div className="relative overflow-hidden rounded-3xl bg-basalt shadow-[0_24px_70px_rgba(0,0,0,0.55)] ring-1 ring-ceramic/[0.07]">
+        <div
+          className={`relative flex flex-col overflow-hidden bg-basalt shadow-[0_24px_70px_rgba(0,0,0,0.55)] ring-1 ring-ceramic/[0.07] ${
+            sheet ? 'h-full rounded-none' : 'rounded-3xl'
+          }`}
+        >
           {/* Its own terrain, so the panel reads the same wherever it opens over the page */}
           <div className="pointer-events-none absolute inset-0 opacity-70">
             <TopoField seed={5} intensity={0.6} />
           </div>
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_80%_at_50%_0%,rgba(11,15,14,0.72),rgba(11,15,14,0.94)_60%,#0B0F0E)]" />
 
-          <div className="relative flex h-[min(72vh,540px)] flex-col" style={bodyStyle}>
+          <div className={`relative flex flex-col ${sheet ? "min-h-0 flex-1" : "h-[min(72vh,540px)]"}`}>
             <header className="flex items-center gap-3 border-b border-ceramic/10 px-4 py-3.5">
               <Summit size={34} rings={6} paused={reduced} />
               <div className="min-w-0 flex-1">
